@@ -1,3 +1,12 @@
+# Credits
+This fantastic project is not developed by me. The project is forked from this : https://github.com/dkjonas/Wavin-AHC-9000-mqtt
+
+All the credits go to the originally owner "dkjonas". 
+
+I made some modifications to this project, so the system integrates 3 led´s which can be used to indicate power, mqtt and wifi when all the electronics are mounted in a box. 
+
+This project will recieve further updates. 
+
 # Wavin-AHC-9000-mqtt
 This is a simple Esp8266 mqtt interface for Wavin AHC-9000/Jablotron AC-116, with the goal of being able to control this heating controller from a home automation system.
 
