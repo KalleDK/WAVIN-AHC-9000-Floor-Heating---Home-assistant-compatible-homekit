@@ -263,7 +263,7 @@ void pulse(uint8_t ledid) // This is the breathing LED code
 void loop()
 {
 
-  digitalWrite(D4, LOW); // Turn on blue LED to indicate that the ESP is powered.
+  digitalWrite(D4, HIGH); // Turn on blue LED to indicate that the ESP is powered.
 
   if (WiFi.status() != WL_CONNECTED)
   {
