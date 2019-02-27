@@ -15,11 +15,34 @@ The AHC-9000 uses modbus to communicate over a half duplex RS422 connection. It 
 The following schematic shows how to connect an Esp8266 to the AHC-9000:
 ![Schematic](/electronics/schematic.png)
 
-Components with links to devices on eBay
-* Esp8266. I use a [NodeMcu 0.9](https://www.ebay.com/itm/NEW-Version-NodeMcu-Lua-ESP8266-CH340-WIFI-Internet-Development-Board-Module/311413475392?epid=502141093&hash=item4881b08840:g:-IEAAOSw-YVXldDM), mostly because it is very convenient to have the onboard USB interface for programming. Almost anything with an Esp8266 on it will work.
-* [24V to 3v3 switchmode converter](https://www.ebay.com/itm/DC-Buck-24V-12V-9V-to-3-3V-3A-Step-Down-Converter-Voltage-Regulator-Power-Module/173494900654?hash=item28651a17ae:g:688AAOSwL1hbgY62). This is only needed if you want to power the Esp8266 from the AHC-9000. A 24V to 5V converter can also be used, if it is connected to the +5V input of the NodeMcu. Please note that not all 3V3 step down converters on eBay supports 24V input
-* [MAX3072E](https://www.maximintegrated.com/en/products/interface/transceivers/MAX3072E.html) for converting the 3V3 serial output from the Esp8266 to RS422. There are many similar IC's from other suppliers, which can also be used. Speed is limited, and cables can be kept short, so this is rather uncritical. Note though, that it should be a 3V3 version. [MAX3485](https://www.ebay.com/itm/5pcs-MAX3485CPA-DIP-DIP-8-MAX3485-3-3V-Powered-Transceiver-new/400985402735?hash=item5d5c97ad6f:g:WS4AAOSwGvhT43se) should be compatible, and can be found on eBay.
-* RJ45 connector. This can be omitted by soldering a patch cable directly to the circuit.
+## Components with links to devices on Aliexpress
+
+* Buck Converter : https://www.aliexpress.com/item/LM2596-LM2596S-LED-Voltmeter-ADJ-DC-DC-Step-down-Step-Down-Adjustable-Power-Supply-Module-With/32827909407.html?spm=a2g0s.9042311.0.0.7edb4c4duCPOwN
+
+* Tripler Base: https://www.aliexpress.com/item/TZT-Tripler-Base-V1-0-0-Module-Board-with-Pins-D1-Mini-Active-Components-Integrated-Circuits/32848786211.html?spm=a2g0s.9042311.0.0.27424c4dOt1jSr
+
+* Protoboard-shield : https://www.aliexpress.com/item/ProtoBoard-Shield-for-WeMos-D1-mini-double-sided-perf-board-Compatible/32823336161.html?spm=a2g0s.9042311.0.0.27424c4dOt1jSr
+
+* LED : https://www.aliexpress.com/item/Free-Ship-100PCS-2-3-4-2-5-7-Square-Transparent-LED-Red-Yellow-Green-Blue/32869433921.html?spm=a2g0s.9042311.0.0.27424c4dls9aGy
+
+* Thread M3 : https://www.aliexpress.com/item/100pcs-m3-3-4-5-6-8-OD-4-2mm-M3-Injection-Molding-Brass-Knurled-Thread/32813496424.html?spm=a2g0s.9042311.0.0.27424c4dhfqKHo
+
+* M3 bolts.
+
+* Modbus IC MAX3072E : https://www.aliexpress.com/item/MAX3072E-MAX3072EEPA-DIP/32859557410.html?spm=a2g0s.9042311.0.0.27424c4d1kt8zR
+
+* DIP Socket : https://www.aliexpress.com/item/High-quality-20pcs-lot-8-Pins-DIP-DIP8-IC-Sockets-Adaptor-Solder-Type-8-PIN-IC/32822549802.html?spm=a2g0s.9042311.0.0.27424c4dFoaid5
+
+* WEMOS D1 mini or PRO or any ESP8266 device for that matter 
+
+* 330R Resisitors
+
+* RJ-45 Breakoutboard : https://www.aliexpress.com/item/Durable-Tap-Electronics-RJ45-Breakout-ModuleBoard-For-Arduino-New/32923930313.html?spm=a2g0s.9042311.0.0.27424c4dYoLJ5s
+
+* RJ-45 Socket : https://www.aliexpress.com/item/10Pcs-set-RJ45-Network-Ethernet-8P-8C-Female-Socket-Connectors-8Pin-PCB-Mount-RJ45-8P8C-Single/32850223640.html?spm=a2g0s.9042311.0.0.27424c4dhfv0iu
+
+
+
 
 ## Software
 
