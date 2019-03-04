@@ -281,18 +281,32 @@ display:
       
       - id: page1
         lambda: |-
+          
+          //Print title for room
           it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Workshop");
+          
+          //Print number for circuit on the AHC-9000 Heat controller unit.
           it.printf(128, 0, id(font1), TextAlign::RIGHT, "1");
+          
+          //Print the correct clock / time from Home Assistant
           it.strftime(0, 0, id(font1), TextAlign::LEFT, "%H:%M", id(time).now());
           
+          // Print a divider-line
+          it.line(0, 12, 128, 12);
+          
+          //Print the actual temperature in the room  
           if (id(temp_workshop).has_state()) {
           it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_workshop).state.c_str());}
           
+          //Print the target temperature for the room - ex. what have you set your thermostat at.
           if (id(target_workshop).has_state()) {
           it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_workshop).state.c_str());}
           
+          //Print the status of the circuit - is the heater on?? (On / Off)
           if (id(status_workshop).has_state()) {
           it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_workshop).state.c_str());}
+
+
 
       - id: page2
         lambda: |-
