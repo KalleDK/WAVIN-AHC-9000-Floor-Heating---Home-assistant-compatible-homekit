@@ -51,6 +51,8 @@ src/PrivateConfig.h contains 5 constants, that should be changed to fit your own
 
 `WIFI_SSID`, `WIFI_PASS`, `MQTT_SERVER`, `MQTT_USER`, and `MQTT_PASS`.
 
+NOTE: If you use MQTT password AND username, remember to change lines in the code according to the description in the code!!
+
 ### Compiling
 I use [PlatformIO](https://platformio.org/) for compiling, uploading, and and maintaining dependencies for my code. If you install PlatformIO in a supported editor, building this project is quite simple. Just open the directory containing `platformio.ini` from this project, and click build/upload. If you use a different board than nodemcu, remember to change the `board` variable in `platformio.ini`.
 You may be able to use the Arduino tools with the esp8266 additions for compiling, but a few changes may be needed, including downloading dependencies manually.
