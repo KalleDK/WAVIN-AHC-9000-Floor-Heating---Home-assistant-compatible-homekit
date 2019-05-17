@@ -285,9 +285,7 @@ void loop()
     if (!mqttClient.connected())
     {
       String will = String(MQTT_PREFIX + mqttDeviceNameWithMac + MQTT_ONLINE);
-      if (mqttClient.connect(mqttClientWithMac.c_str(), will.c_str(), 1, true, "False"))
-      //if (mqttClient.connect(mqttClientWithMac.c_str(), MQTT_USER.c_str(), MQTT_PASS.c_str(), will.c_str(), 1, true, "False") )
-      // uncomment line 287 if you use MQTT security credentials!!!!
+      if (mqttClient.connect(mqttClientWithMac.c_str(), MQTT_USER.c_str(), MQTT_PASS.c_str(), will.c_str(), 1, true, "False") )
       {
         digitalWrite(LED1, HIGH); // Turn on blue LED when MQTT is connected
         digitalWrite(LED2, HIGH); // Turn on blue LED when MQTT is connected
