@@ -223,7 +223,7 @@ void setup()
 
   pinMode(LED2, OUTPUT); // LED connected on PIN D2 as output (WIFI Indicator - Blue LED).
 
-  pinMode(D4, OUTPUT);   // LED connected on PIN D4 as output (Power indicator - White LED).
+  pinMode(LED3, OUTPUT);   // LED connected on PIN D4 as output (Power indicator - White LED).
 }
 
 // This is the breathing LED code
@@ -257,7 +257,7 @@ void pulse(uint8_t ledid)
 void loop()
 {
 
-  digitalWrite(D4, HIGH); // Turn on white LED to indicate that the ESP is powered.
+  digitalWrite(LED3, HIGH); // Turn on white LED to indicate that the ESP is powered.
 
   if (WiFi.status() != WL_CONNECTED)
   {
