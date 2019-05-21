@@ -229,7 +229,7 @@ void setup()
 
 void loop()
 {
-  digitalWrite(LED3, LOW); // Turn on white LED to indicate that the ESP is powered.
+  digitalWrite(LED3, HIGH); // Turn on white LED to indicate that the ESP is powered.
 
   if (WiFi.status() != WL_CONNECTED)
   {
