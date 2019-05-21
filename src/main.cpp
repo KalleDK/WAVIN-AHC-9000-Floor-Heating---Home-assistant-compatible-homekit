@@ -2,7 +2,6 @@
 #include <PubSubClient.h>
 #include "WavinController.h"
 #include "PrivateConfig.h"
-#include "Ledconfig.h"
 
 // MQTT defines
 // Esp8266 MAC will be added to the device name, to ensure unique topics
@@ -219,74 +218,37 @@ void setup()
   mqttClient.setServer(MQTT_SERVER.c_str(), MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
 
-  pinMode(LED1, OUTPUT); // LED connected on PIN D5 as output (MQTT Indicator - Blue LED).
+  pinMode(LED1, OUTPUT); // LED connected on PIN D2 as output (WIFI Indicator - Blue LED).
 
-  pinMode(LED2, OUTPUT); // LED connected on PIN D2 as output (WIFI Indicator - Blue LED).
+  pinMode(LED2, OUTPUT); // LED connected on PIN D5 as output (MQTT Indicator - Blue LED).
 
-  pinMode(LED3, OUTPUT);   // LED connected on PIN D4 as output (Power indicator - White LED).
+  pinMode(LED3, OUTPUT); // LED connected on PIN D4 as output (Power indicator - White LED).
 }
-
-// This is the breathing LED code
-
-void pulse(uint8_t ledid) 
-{
-  //ramp increasing intensity, Inhalation:
-  for (int i = 1; i < BRIGHT; i++)
-  {
-    digitalWrite(ledid, LOW);          // turn the LED on.
-    delayMicroseconds(i * 10);         // wait
-    digitalWrite(ledid, HIGH);         // turn the LED off.
-    delayMicroseconds(PULSE - i * 10); // wait
-    delay(0);                          //to prevent watchdog firing.
-  }
-  //ramp decreasing intensity, Exhalation (half time):
-  for (int i = BRIGHT - 1; i > 0; i--)
-  {
-    digitalWrite(ledid, LOW);          // turn the LED on.
-    delayMicroseconds(i * 10);         // wait
-    digitalWrite(ledid, HIGH);         // turn the LED off.
-    delayMicroseconds(PULSE - i * 10); // wait
-    i--;
-    delay(0); //to prevent watchdog firing.
-  }
-  delay(REST); //take a rest...
-}
-
-//
 
 void loop()
 {
-
-  digitalWrite(LED3, HIGH); // Turn on white LED to indicate that the ESP is powered.
+  digitalWrite(LED3, LOW); // Turn on white LED to indicate that the ESP is powered.
 
   if (WiFi.status() != WL_CONNECTED)
   {
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID.c_str(), WIFI_PASS.c_str());
-    
-// start Pulse WIFI LED if Wifi is not connected
-
-    delay(1000);
-    pulse(LED1); // Blue LED for MQTT
-    delay(1000); 
-    pulse(LED2); // Blue LED for WIFI
-    delay(1000);
-
-//
 
     if (WiFi.waitForConnectResult() != WL_CONNECTED)
       return;
   }
 
   if (WiFi.status() == WL_CONNECTED)
+
+    digitalWrite(LED1, HIGH); // Turn on blue LED when WIFI is connected
+
   {
     if (!mqttClient.connected())
     {
       String will = String(MQTT_PREFIX + mqttDeviceNameWithMac + MQTT_ONLINE);
-      if (mqttClient.connect(mqttClientWithMac.c_str(), MQTT_USER.c_str(), MQTT_PASS.c_str(), will.c_str(), 1, true, "False") )
+      if (mqttClient.connect(mqttClientWithMac.c_str(), MQTT_USER.c_str(), MQTT_PASS.c_str(), will.c_str(), 1, true, "False"))
       {
-        digitalWrite(LED1, HIGH); // Turn on blue LED when MQTT is connected
-        digitalWrite(LED2, HIGH); // Turn on blue LED when WIFI is connected
+        digitalWrite(LED2, HIGH); // Turn on blue LED when MQTT is connected
 
         String setpointSetTopic = String(MQTT_PREFIX + mqttDeviceNameWithMac + "/+" + MQTT_SUFFIX_SETPOINT_SET);
         mqttClient.subscribe(setpointSetTopic.c_str(), 1);
@@ -301,10 +263,8 @@ void loop()
       }
       else
       {
-
-        // Start Pulse on Blue LED if MQTT is not connected 
-
-        pulse(LED1);
+        digitalWrite(LED1, LOW); // Turn off blue LED when MQTT is disconnected
+        digitalWrite(LED2, LOW); // Turn off blue LED when WIFI is disconnected (Note: no wifi = no mqtt)
         return;
       }
     }
