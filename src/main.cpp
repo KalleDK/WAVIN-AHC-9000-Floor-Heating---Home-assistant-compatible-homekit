@@ -2,6 +2,7 @@
 #include <PubSubClient.h>
 #include "WavinController.h"
 #include "PrivateConfig.h"
+#include <ArduinoOTA.h>
 
 // MQTT defines
 // Esp8266 MAC will be added to the device name, to ensure unique topics
@@ -207,11 +208,21 @@ void publishConfiguration(uint8_t channel)
 
 void setup()
 {
+  Serial.begin(115200);
+  Serial.println("Booting...");
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.println("Connection Failed! Rebooting...");
+    delay(5000);
+    ESP.restart();
+  } 
+
   pinMode(LED1, OUTPUT); // LED connected on PIN D2 as output (WIFI Indicator - Blue LED).
 
   pinMode(LED2, OUTPUT); // LED connected on PIN D5 as output (MQTT Indicator - Blue LED).
 
-  pinMode(LED3, OUTPUT); // LED connected on PIN D4 as output (Power indicator - White LED).
+  pinMode(LED3, OUTPUT); // LED connected on PIN D4 as output (Power indicator - White LED). 
 
   uint8_t mac[6];
   WiFi.macAddress(mac);
@@ -224,6 +235,28 @@ void setup()
 
   mqttClient.setServer(MQTT_SERVER.c_str(), MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
+
+  ArduinoOTA.onStart([]() {
+    Serial.println("Start");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+  ArduinoOTA.begin();
+  Serial.println("Ready");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
 
@@ -241,15 +274,14 @@ void loop()
 
   if (WiFi.status() == WL_CONNECTED)
 
-  digitalWrite(LED1, HIGH); // Turn on blue LED when WIFI is connected
-
+   digitalWrite(LED1, HIGH); // Turn on blue LED when WIFI is connected
   {
     if (!mqttClient.connected())
     {
       String will = String(MQTT_PREFIX + mqttDeviceNameWithMac + MQTT_ONLINE);
       if (mqttClient.connect(mqttClientWithMac.c_str(), MQTT_USER.c_str(), MQTT_PASS.c_str(), will.c_str(), 1, true, "False") )
       {
-          digitalWrite(LED2, HIGH); // Turn on blue LED when MQTT is connected
+        digitalWrite(LED2, HIGH); // Turn on blue LED when MQTT is connected
 
           String setpointSetTopic = String(MQTT_PREFIX + mqttDeviceNameWithMac + "/+" + MQTT_SUFFIX_SETPOINT_SET);
           mqttClient.subscribe(setpointSetTopic.c_str(), 1);
@@ -264,8 +296,8 @@ void loop()
       }
       else
       {
-          digitalWrite(LED1, LOW); // Turn off blue LED when MQTT is disconnected
-          digitalWrite(LED2, LOW); // Turn off blue LED when WIFI is disconnected
+        digitalWrite(LED1, LOW); // Turn off blue LED when MQTT is disconnected
+        digitalWrite(LED2, LOW); // Turn off blue LED when WIFI is disconnected
           return;
       }
     }
@@ -375,4 +407,6 @@ void loop()
       }
     }
   }
+  
+  ArduinoOTA.handle();
 }
