@@ -3,6 +3,8 @@
 #include "WavinController.h"
 #include "PrivateConfig.h"
 #include <ArduinoOTA.h>
+#include <ESP8266mDNS.h>
+#include <WiFiUdp.h>
 
 // MQTT defines
 // Esp8266 MAC will be added to the device name, to ensure unique topics
@@ -205,24 +207,86 @@ void publishConfiguration(uint8_t channel)
   configurationPublished[channel] = true;
 }
 
-
 void setup()
 {
-  Serial.begin(115200);
-  Serial.println("Booting...");
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
-  } 
+  //Setup Pinmodes for status LED´s 
 
   pinMode(LED1, OUTPUT); // LED connected on PIN D2 as output (WIFI Indicator - Blue LED).
 
   pinMode(LED2, OUTPUT); // LED connected on PIN D5 as output (MQTT Indicator - Blue LED).
 
-  pinMode(LED3, OUTPUT); // LED connected on PIN D4 as output (Power indicator - White LED). 
+  pinMode(LED3, OUTPUT); // LED connected on PIN D4 as output (Power indicator - White LED).
+
+  // Setup OTA support
+  
+  Serial.begin(115200);
+  Serial.println("Booting...");
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  while (WiFi.waitForConnectResult() != WL_CONNECTED)
+  {
+    Serial.println("Connection Failed! Rebooting...");
+    delay(5000);
+    ESP.restart();
+  }
+
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH)
+    {
+      type = "sketch";
+    }
+    else
+    { // U_FS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR)
+    {
+      Serial.println("Auth Failed");
+    }
+    else if (error == OTA_BEGIN_ERROR)
+    {
+      Serial.println("Begin Failed");
+    }
+    else if (error == OTA_CONNECT_ERROR)
+    {
+      Serial.println("Connect Failed");
+    }
+    else if (error == OTA_RECEIVE_ERROR)
+    {
+      Serial.println("Receive Failed");
+    }
+    else if (error == OTA_END_ERROR)
+    {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
+  delay(2000);
+  Serial.println("Ready for business OTA");
+  delay(2000);
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(2000);
+  Serial.println("Remember to uncomment line 18 and 19 in the platformio.ini file before making OTA´s");
+  delay(2000);
+  Serial.println("OTA Support is now ready");
+  delay(2000);
+  Serial.end();
+
+  //
 
   uint8_t mac[6];
   WiFi.macAddress(mac);
@@ -235,30 +299,7 @@ void setup()
 
   mqttClient.setServer(MQTT_SERVER.c_str(), MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
-
-  ArduinoOTA.onStart([]() {
-    Serial.println("Start");
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
-  });
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-  });
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
-  });
-  ArduinoOTA.begin();
-  Serial.println("Ready");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
 }
-
 
 void loop()
 {
@@ -406,7 +447,6 @@ void loop()
         }
       }
     }
-  }
-  
+  } 
   ArduinoOTA.handle();
 }
