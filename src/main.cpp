@@ -215,7 +215,14 @@ void setup()
 
   pinMode(LED3, OUTPUT); // LED connected on PIN D4 as output (Power indicator - White LED).
 
+  /* END PINMODE SETUP */
+  
   /* ARDUINO 'OVER THE AIR' CONFIGURATION */
+
+  ArduinoOTA.setHostname("WAVIN-AHC9000-GATEWAY");
+
+  //ArduinoOTA.setPassword("admin"); // Uncomment this line if you want to set a password for OTA - here "admin"
+  
   ArduinoOTA.onStart( []() {
   
   });
@@ -225,10 +232,9 @@ void setup()
   ArduinoOTA.onEnd( []() {
   
   });
-  // ArduinoOTA.setHostname( DEVICE_ID + String(ESP.getChipId()) );
   ArduinoOTA.begin();
   
-  /* END OTA */
+  /* END OTA CONFIG */
 
   uint8_t mac[6];
   WiFi.macAddress(mac);
