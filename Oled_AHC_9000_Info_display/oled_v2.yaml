@@ -1,0 +1,452 @@
+esphome:
+  name: wavin_oled
+  platform: ESP8266
+  board: nodemcuv2
+
+wifi:
+  ssid: "XXXXXXX"
+  password: "XXXXXXXX"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Wavin Oled Fallback Hotspot"
+    password: "dXkFID9342z3"
+
+captive_portal:
+
+# Enable logging
+logger:
+
+ota:
+
+mqtt:
+  broker: 10.0.1.2
+  keepalive: 15s
+    
+text_sensor:
+
+# Værksted 
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Workshop"
+    id: temp_workshop
+    topic: heat/floorB4E62D292F41/0/current
+  - platform: mqtt_subscribe
+    name: "Status Workshop"
+    id: status_workshop
+    topic: heat/floorB4E62D292F41/0/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Workshop"
+    id: target_workshop
+    topic: heat/floorB4E62D292F41/0/target
+  - platform: mqtt_subscribe
+    name: "Batteri Workshop"
+    id: battery_workshop
+    topic: heat/floorB4E62D292F41/0/battery
+
+# Victors værelse
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Victor"
+    id: temp_victor
+    topic: heat/floorB4E62D292F41/1/current
+  - platform: mqtt_subscribe
+    name: "Status Victor"
+    id: status_victor
+    topic: heat/floorB4E62D292F41/1/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Victor"
+    id: target_victor
+    topic: heat/floorB4E62D292F41/1/target
+  - platform: mqtt_subscribe
+    name: "Batteri Victor"
+    id: battery_victor
+    topic: heat/floorB4E62D292F41/1/battery
+ 
+# Gæstebadeværelse 
+    
+  - platform: mqtt_subscribe
+    name: "Temperatur Gæstebadeværelse"
+    id: temp_guest_bath
+    topic: heat/floorB4E62D292F41/2/current
+  - platform: mqtt_subscribe
+    name: "Status Gæstebadeværelse"
+    id: status_guest_bath
+    topic: heat/floorB4E62D292F41/2/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Gæstebadeværelse"
+    id: target_guest_bath
+    topic: heat/floorB4E62D292F41/2/target
+  - platform: mqtt_subscribe
+    name: "Batteri Gæstebadeværelse"
+    id: battery_guest_bath
+    topic: heat/floorB4E62D292F41/2/battery 
+    
+# Gang / Bryggers
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Gang/Bryggers"
+    id: temp_hallway
+    topic: heat/floorB4E62D292F41/3/current
+  - platform: mqtt_subscribe
+    name: "Status Gang/Bryggers"
+    id: status_hallway
+    topic: heat/floorB4E62D292F41/3/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Gang/Bryggers"
+    id: target_hallway
+    topic: heat/floorB4E62D292F41/3/target
+  - platform: mqtt_subscribe
+    name: "Batteri Gang/Bryggers"
+    id: battery_hallway
+    topic: heat/floorB4E62D292F41/3/battery 
+
+# Kontor
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Kontor"
+    id: temp_office
+    topic: heat/floorB4E62D292F41/4/current
+  - platform: mqtt_subscribe
+    name: "Status Kontor"
+    id: status_office
+    topic: heat/floorB4E62D292F41/4/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Kontor"
+    id: target_office
+    topic: heat/floorB4E62D292F41/4/target
+  - platform: mqtt_subscribe
+    name: "Batteri Kontor"
+    id: battery_office
+    topic: heat/floorB4E62D292F41/4/battery 
+    
+# Køkken
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Køkken"
+    id: temp_kitchen
+    topic: heat/floorB4E62D292F41/5/current
+  - platform: mqtt_subscribe
+    name: "Status Køkken"
+    id: status_kitchen
+    topic: heat/floorB4E62D292F41/5/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Køkken"
+    id: target_kitchen
+    topic: heat/floorB4E62D292F41/5/target
+  - platform: mqtt_subscribe
+    name: "Batteri Køkken"
+    id: battery_kitchen
+    topic: heat/floorB4E62D292F41/5/battery
+    
+# Køkken Alrum
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Køkken/Alrum"
+    id: temp_dining_place
+    topic: heat/floorB4E62D292F41/6/current
+  - platform: mqtt_subscribe
+    name: "Status Køkken/Alrum"
+    id: status_dining_place
+    topic: heat/floorB4E62D292F41/6/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Køkken/Alrum"
+    id: target_dining_place
+    topic: heat/floorB4E62D292F41/6/target
+  - platform: mqtt_subscribe
+    name: "Batteri Køkken/Alrum"
+    id: battery_dining_place
+    topic: heat/floorB4E62D292F41/6/battery
+    
+# Badeværelse
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Badeværelse"
+    id: temp_bathroom
+    topic: heat/floorB4E62D292F41/7/current
+  - platform: mqtt_subscribe
+    name: "Status Badeværelse"
+    id: status_bathroom
+    topic: heat/floorB4E62D292F41/7/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Badeværelse"
+    id: target_bathroom
+    topic: heat/floorB4E62D292F41/7/target
+  - platform: mqtt_subscribe
+    name: "Batteri Badeværelse"
+    id: battery_bathroom
+    topic: heat/floorB4E62D292F41/7/battery      
+    
+# Soveværelse
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Soveværelse"
+    id: temp_bedroom
+    topic: heat/floorB4E62D292F41/8/current
+  - platform: mqtt_subscribe
+    name: "Status Soveværelse"
+    id: status_bedroom
+    topic: heat/floorB4E62D292F41/8/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Soveværelse"
+    id: target_bedroom
+    topic: heat/floorB4E62D292F41/8/target
+  - platform: mqtt_subscribe
+    name: "Batteri Soveværelse"
+    id: battery_bedroom
+    topic: heat/floorB4E62D292F41/8/battery
+    
+# Stue
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Stue"
+    id: temp_livingroom
+    topic: heat/floorB4E62D292F41/9/current
+  - platform: mqtt_subscribe
+    name: "Status Stue"
+    id: status_livingroom
+    topic: heat/floorB4E62D292F41/9/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Stue"
+    id: target_livingroom
+    topic: heat/floorB4E62D292F41/9/target
+  - platform: mqtt_subscribe
+    name: "Batteri Stue"
+    id: battery_livingroom
+    topic: heat/floorB4E62D292F41/9/battery 
+    
+# Emils Værelse
+
+  - platform: mqtt_subscribe
+    name: "Temperatur Emil"
+    id: temp_emil
+    topic: heat/floorB4E62D292F41/10/current
+  - platform: mqtt_subscribe
+    name: "Status Emil"
+    id: status_emil
+    topic: heat/floorB4E62D292F41/10/output
+  - platform: mqtt_subscribe
+    name: "Target Temperatur Emil"
+    id: target_emil
+    topic: heat/floorB4E62D292F41/10/target
+  - platform: mqtt_subscribe
+    name: "Batteri Emil"
+    id: battery_emil
+    topic: heat/floorB4E62D292F41/10/battery     
+                
+            
+        
+    
+
+
+        
+    
+    
+    
+font:
+  - file: 'slkscr.ttf'
+    id: font1
+    size: 8
+
+  - file: 'BebasNeue-Regular.ttf'
+    id: font2
+    size: 48
+
+  - file: 'OpenSans-Light.ttf'
+    id: font3
+    size: 14
+
+i2c:
+  sda: D2
+  scl: D1
+  scan: False
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    reset_pin: D0
+    address: 0x3C
+    update_interval: 3s
+    id: my_display
+    pages:
+      
+      - id: page1
+        lambda: |-
+          
+          //Print title for room
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Workshop");
+          
+          //Print number for circuit on the AHC-9000 Heat controller unit.
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "1");
+          
+          // Print a divider-line
+          it.line(0, 12, 128, 12);
+          
+          //Print the actual temperature in the room  
+          if (id(temp_workshop).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_workshop).state.c_str());}
+          
+          //Print the target temperature for the room - ex. what have you set your thermostat at.
+          if (id(target_workshop).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_workshop).state.c_str());}
+          
+          //Print the status of the circuit - is the heater on?? (On / Off)
+          if (id(status_workshop).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_workshop).state.c_str());}
+      - id: page2
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Victor Room");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "2");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_victor).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_victor).state.c_str());}
+          
+          if (id(target_victor).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_victor).state.c_str());}
+          
+          if (id(status_victor).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_victor).state.c_str());}
+          
+      - id: page3
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Guest Bath");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "3");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_guest_bath).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_guest_bath).state.c_str());}
+          
+          if (id(target_guest_bath).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_guest_bath).state.c_str());}
+          
+          if (id(status_guest_bath).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_guest_bath).state.c_str());}  
+          
+      - id: page4
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Hallway");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "4");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_hallway).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_hallway).state.c_str());}
+          
+          if (id(target_hallway).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_hallway).state.c_str());}
+          
+          if (id(status_hallway).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_hallway).state.c_str());} 
+          
+      - id: page5
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Office");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "5");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_office).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_office).state.c_str());}
+          
+          if (id(target_office).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_office).state.c_str());}
+          
+          if (id(status_office).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_office).state.c_str());} 
+          
+      - id: page6
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Kitchen");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "6");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_kitchen).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_kitchen).state.c_str());}
+          
+          if (id(target_kitchen).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_kitchen).state.c_str());}
+          
+          if (id(status_kitchen).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_kitchen).state.c_str());} 
+          
+      - id: page7
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Dining Place");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "7");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_dining_place).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_dining_place).state.c_str());}
+          
+          if (id(target_dining_place).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_dining_place).state.c_str());}
+          
+          if (id(status_dining_place).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_dining_place).state.c_str());}
+          
+      - id: page8
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Bathroom");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "8");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_bathroom).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_bathroom).state.c_str());}
+          
+          if (id(target_bathroom).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_bathroom).state.c_str());}
+          
+          if (id(status_bathroom).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_bathroom).state.c_str());}
+          
+      - id: page9
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Bedroom");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "9");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_bedroom).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_bedroom).state.c_str());}
+          
+          if (id(target_bedroom).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_bedroom).state.c_str());}
+          
+          if (id(status_bedroom).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_bedroom).state.c_str());}
+          
+      - id: page10
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Livingroom");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "10");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_livingroom).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_livingroom).state.c_str());}
+          
+          if (id(target_livingroom).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_livingroom).state.c_str());}
+          
+          if (id(status_livingroom).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_livingroom).state.c_str());}
+          
+      - id: page11
+        lambda: |-
+          it.printf(64, 0, id(font1), TextAlign::TOP_CENTER, "Emil Room");
+          it.printf(128, 0, id(font1), TextAlign::RIGHT, "11");
+          it.line(0, 12, 128, 12);
+          
+          if (id(temp_emil).has_state()) {
+          it.printf(0, 60, id(font2), TextAlign::BASELINE_LEFT , "%s°", id(temp_emil).state.c_str());}
+          
+          if (id(target_emil).has_state()) {
+          it.printf(127, 23, id(font3), TextAlign::TOP_RIGHT , "%s°", id(target_emil).state.c_str());}
+          
+          if (id(status_emil).has_state()) {
+          it.printf(127, 60, id(font3), TextAlign::BASELINE_RIGHT , "%s", id(status_emil).state.c_str());}          
+          
+interval:
+  - interval: 3s
+    then:
+      - display.page.show_next: my_display
+      - component.update: my_display          
+    
+    
