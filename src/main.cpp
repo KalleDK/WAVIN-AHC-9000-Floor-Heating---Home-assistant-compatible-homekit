@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-#include "WavinController.h"
 #include <ArduinoOTA.h>
+#include "WavinController.h"
 #include "PrivateConfig.h"
 
 // MQTT defines
@@ -21,8 +21,7 @@ const String   MQTT_SUFFIX_OUTPUT       = "/output";
 const String   MQTT_VALUE_MODE_STANDBY  = "off";
 const String   MQTT_VALUE_MODE_MANUAL   = "heat";
 
-const String   MQTT_CLIENT = "Wavin-AHC9000-Gateway";       // mqtt client_id prefix. Will be suffixed with Esp8266 mac to make it unique
-const uint16_t MQTT_PORT   = 1883;                        // mqtt port
+const String   MQTT_CLIENT = "Wavin-AHC-9000-mqtt";       // mqtt client_id prefix. Will be suffixed with Esp8266 mac to make it unique
 
 String mqttDeviceNameWithMac;
 String mqttClientWithMac;
@@ -205,6 +204,7 @@ void publishConfiguration(uint8_t channel)
   configurationPublished[channel] = true;
 }
 
+
 void setup()
 {
   /* SET PINMODES FOR LED OUTPUT */
@@ -216,25 +216,6 @@ void setup()
   pinMode(LED3, OUTPUT); // LED connected on PIN D4 as output (Power indicator - White LED).
 
   /* END PINMODE SETUP */
-  
-  /* ARDUINO 'OVER THE AIR' CONFIGURATION */
-
-  ArduinoOTA.setHostname("WAVIN-AHC9000-GATEWAY");
-
-  //ArduinoOTA.setPassword("admin"); // Uncomment this line if you want to set a password for OTA - here "admin"
-  
-  ArduinoOTA.onStart( []() {
-  
-  });
-  ArduinoOTA.onProgress( [](unsigned int progress, unsigned int total) {
-  
-  });
-  ArduinoOTA.onEnd( []() {
-  
-  });
-  ArduinoOTA.begin();
-  
-  /* END OTA CONFIG */
 
   uint8_t mac[6];
   WiFi.macAddress(mac);
@@ -247,12 +228,52 @@ void setup()
 
   mqttClient.setServer(MQTT_SERVER.c_str(), MQTT_PORT);
   mqttClient.setCallback(mqttCallback);
+
+  ArduinoOTA.setHostname("wavin");
+
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_FS
+      type = "filesystem";
+    }
+
+    // Print to USB instead of Wavin
+    Serial.swap();
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+
+  ArduinoOTA.begin();
 }
 
 void loop()
 {
-  ArduinoOTA.handle(); // Run OTA
-
   digitalWrite(LED3, HIGH); // Turn on white LED to indicate that the ESP is powered.
 
   if (WiFi.status() != WL_CONNECTED)
@@ -260,43 +281,44 @@ void loop()
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID.c_str(), WIFI_PASS.c_str());
 
-    if (WiFi.waitForConnectResult() != WL_CONNECTED)
-      return;
+    if (WiFi.waitForConnectResult() != WL_CONNECTED) return;
   }
 
   if (WiFi.status() == WL_CONNECTED)
 
-    digitalWrite(LED1, HIGH); // Turn on blue LED when WIFI is connected
-
+  digitalWrite(LED1, HIGH); // Turn on blue LED when WIFI is connected
   {
+    // OTA
+    ArduinoOTA.handle();
+
     if (!mqttClient.connected())
     {
       String will = String(MQTT_PREFIX + mqttDeviceNameWithMac + MQTT_ONLINE);
-      if (mqttClient.connect(mqttClientWithMac.c_str(), MQTT_USER.c_str(), MQTT_PASS.c_str(), will.c_str(), 1, true, "False"))
-
+      if (mqttClient.connect(mqttClientWithMac.c_str(), MQTT_USER.c_str(), MQTT_PASS.c_str(), will.c_str(), 1, true, "False") )
       {
+          digitalWrite(LED2, HIGH); // Turn on blue LED when MQTT is connected
 
-        digitalWrite(LED2, HIGH); // Turn on blue LED when MQTT is connected
+          String setpointSetTopic = String(MQTT_PREFIX + mqttDeviceNameWithMac + "/+" + MQTT_SUFFIX_SETPOINT_SET);
+          mqttClient.subscribe(setpointSetTopic.c_str(), 1);
+          
+          String modeSetTopic = String(MQTT_PREFIX + mqttDeviceNameWithMac + "/+" + MQTT_SUFFIX_MODE_SET);
+          mqttClient.subscribe(modeSetTopic.c_str(), 1);
+          
+          mqttClient.publish(will.c_str(), (const uint8_t *)"True", 4, true);
 
-        String setpointSetTopic = String(MQTT_PREFIX + mqttDeviceNameWithMac + "/+" + MQTT_SUFFIX_SETPOINT_SET);
-        mqttClient.subscribe(setpointSetTopic.c_str(), 1);
-
-        String modeSetTopic = String(MQTT_PREFIX + mqttDeviceNameWithMac + "/+" + MQTT_SUFFIX_MODE_SET);
-        mqttClient.subscribe(modeSetTopic.c_str(), 1);
-
-        mqttClient.publish(will.c_str(), (const uint8_t *)"True", 4, true);
-
-        // Forces resending of all parameters to server
-        resetLastSentValues();
+          // Forces resending of all parameters to server
+          resetLastSentValues();
       }
       else
       {
-        digitalWrite(LED1, LOW); // Turn off blue LED when MQTT is disconnected
-        digitalWrite(LED2, LOW); // Turn off blue LED when WIFI is disconnected
-        return;
+          digitalWrite(LED1, LOW); // Turn off blue LED when MQTT is disconnected
+          
+          digitalWrite(LED2, LOW); // Turn off blue LED when WIFI is disconnected
+          
+          return;
       }
     }
-
+  
     // Process incomming messages and maintain connection to the server
     if(!mqttClient.loop())
     {
@@ -403,4 +425,3 @@ void loop()
     }
   }
 }
-
