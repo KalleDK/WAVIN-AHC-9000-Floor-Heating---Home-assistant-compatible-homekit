@@ -78,7 +78,7 @@ DOUBLE RESET DETECTOR
 DoubleResetDetector drd(DRD_TIMEOUT, DRD_ADDRESS);
 
 /*------------------------------------------------------------------------------ 
-// MQTT DEFINES
+// MQTT / WIFI / HOSTNAME DEFINES
 ------------------------------------------------------------------------------*/
 
 // Esp8266 MAC will be added to the device name, to ensure unique topics
@@ -97,22 +97,22 @@ const String   MQTT_SUFFIX_OUTPUT       = "/output";
 const String   MQTT_VALUE_MODE_STANDBY  = "off";
 const String   MQTT_VALUE_MODE_MANUAL   = "heat";
 
-String   MQTT_CLIENT = "Wavin-AHC-9000-mqtt"; // mqtt client_id prefix. Will be suffixed with Esp8266 mac to make it unique
+String   MQTT_CLIENT        = "Wavin-AHC-9000-mqtt"; // mqtt client_id prefix. Will be suffixed with Esp8266 mac to make it unique
 
-char MQTT_PORT[6]    = "1883";                // mqtt port = 1883 (Most used port)
-String   WIFI_SSID   = "";                    // wifi ssid
-String   WIFI_PASS   = "";                    // wifi password
+char     MQTT_PORT[6]       = "1883";                // mqtt port = 1883 (Most used port)
+String   WIFI_SSID          = "";                    // wifi ssid
+String   WIFI_PASS          = "";                    // wifi password
 
-String   MQTT_SERVER = "";                    // mqtt server address without port number
-String   MQTT_USER   = "";                    // mqtt user. Use "" for no username
-String   MQTT_PASS   = "";                    // mqtt password. Use "" for no password
+String   MQTT_SERVER        = "";                    // mqtt server address without port number
+String   MQTT_USER          = "";                    // mqtt user. Use "" for no username
+String   MQTT_PASS          = "";                    // mqtt password. Use "" for no password
 
 /*------------------------------------------------------------------------------ 
 FLAGS AND CALLBACK FOR WIFIMANAGER
 ------------------------------------------------------------------------------*/
 
 //flag for saving data
-bool shouldSaveConfig = false;
+bool shouldSaveConfig = true;
 
 //callback notifying us of the need to save config
 void saveConfigCallback () {
@@ -311,7 +311,7 @@ SETUP
 
 void setup()
 {
-  //Serial.begin(38400);
+  //Serial.begin(115200);
   //Serial.println();
 
   //set led pin as output
@@ -326,36 +326,50 @@ void setup()
 
   //read configuration from FS json
   //Serial.println("mounting FS...");
+  char c_MQTT_CLIENT[40] = "";
   char c_MQTT_SERVER[40] = "";
   char c_MQTT_USER[40] = "";
   char c_MQTT_PASS[40] = "";
-  if (SPIFFS.begin()) {
+  
+  if (SPIFFS.begin())
+  {
     //Serial.println("mounted file system");
-    if (SPIFFS.exists("/config.json")) {
+    if (SPIFFS.exists("/config.json"))
+    {
       //file exists, reading and loading
       //Serial.println("reading config file");
       File configFile = SPIFFS.open("/config.json", "r");
-      if (configFile) {
+      if (configFile)
+      {
         //Serial.println("opened config file");
         size_t size = configFile.size();
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[size]);
 
         configFile.readBytes(buf.get(), size);
-        DynamicJsonBuffer jsonBuffer;
-        JsonObject& json = jsonBuffer.parseObject(buf.get());
-        json.printTo(Serial);
-        if (json.success()) {
+        //DynamicJsonBuffer jsonBuffer;
+        //JsonObject& json = jsonBuffer.parseObject(buf.get());
+        DynamicJsonDocument json(1024);
+        auto deserializeError = deserializeJson(json, buf.get());
+        //json.printTo(Serial);
+        serializeJson(json, Serial);
+        //if (json.success()) {
+        if (!deserializeError)
+        {
           //Serial.println("\nparsed json");
-          
 
+          strcpy(c_MQTT_CLIENT, json["mqtt_client"]);
           strcpy(c_MQTT_SERVER, json["mqtt_server"]);
           strcpy(MQTT_PORT, json["mqtt_port"]);
           strcpy(c_MQTT_USER, json["mqtt_user"]);
           strcpy(c_MQTT_PASS, json["mqtt_pass"]);
+          
+
+          MQTT_CLIENT = String(c_MQTT_CLIENT);
           MQTT_SERVER = String(c_MQTT_SERVER);
           MQTT_USER = String(c_MQTT_USER);
           MQTT_PASS = String(c_MQTT_PASS);
+          
 
         } else {
           //Serial.println("failed to load json config");
@@ -369,10 +383,12 @@ void setup()
   //end read
 
   // Custom Parameters
+  WiFiManagerParameter custom_mqtt_client("client", "SET MQTT CLIENT NAME",c_MQTT_CLIENT, 40);
   WiFiManagerParameter custom_mqtt_server("server", "MQTT SERVER",c_MQTT_SERVER, 40);
   WiFiManagerParameter custom_mqtt_port("port", "MQTT PORT", MQTT_PORT, 6);
   WiFiManagerParameter custom_mqtt_user("user", "MQTT USER - Leave blank if not present", c_MQTT_USER, 40);
   WiFiManagerParameter custom_mqtt_pass("pass", "MQTT PASS - Leave Blank if not present", c_MQTT_PASS, 40);
+  
 
   WiFiManager wifiManager;
 
@@ -383,10 +399,12 @@ void setup()
   wifiManager.setSaveConfigCallback(saveConfigCallback);
   
   //add all your parameters here
+  wifiManager.addParameter(&custom_mqtt_client);
   wifiManager.addParameter(&custom_mqtt_server);
   wifiManager.addParameter(&custom_mqtt_port);
   wifiManager.addParameter(&custom_mqtt_user);
   wifiManager.addParameter(&custom_mqtt_pass);
+  
 
   // Detect Double reset to initiate the Captive portal for configuration
   if (drd.detectDoubleReset()) 
@@ -413,31 +431,41 @@ void setup()
   //Serial.println("connected...yeey :)");
 
   //read updated parameters
+  strcpy(c_MQTT_CLIENT, custom_mqtt_client.getValue());
   strcpy(c_MQTT_SERVER, custom_mqtt_server.getValue());
   strcpy(MQTT_PORT, custom_mqtt_port.getValue());
   strcpy(c_MQTT_USER, custom_mqtt_user.getValue());
   strcpy(c_MQTT_PASS, custom_mqtt_pass.getValue());
+  
+  MQTT_CLIENT = String(c_MQTT_CLIENT);
   MQTT_SERVER = String(c_MQTT_SERVER);
   MQTT_USER = String(c_MQTT_USER);
   MQTT_PASS = String(c_MQTT_PASS);
 
   //save the custom parameters to FS
-  if (shouldSaveConfig) {
+  if (shouldSaveConfig)
+  {
     //Serial.println("saving config");
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject& json = jsonBuffer.createObject();
+    //DynamicJsonBuffer jsonBuffer;
+    //JsonObject& json = jsonBuffer.createObject();
+    DynamicJsonDocument json(1024);
+
+    json["mqtt_client"] = c_MQTT_CLIENT;
     json["mqtt_server"] = c_MQTT_SERVER;
     json["mqtt_port"] = MQTT_PORT;
     json["mqtt_user"] = c_MQTT_USER;
     json["mqtt_pass"] = c_MQTT_PASS;
 
     File configFile = SPIFFS.open("/config.json", "w");
-    if (!configFile) {
+    if (!configFile)
+    {
       //Serial.println("failed to open config file for writing");
     }
 
-    json.printTo(Serial);
-    json.printTo(configFile);
+    //json.printTo(Serial);
+    serializeJson(json, Serial);
+    //json.printTo(configFile);
+    serializeJson(json, configFile);
     configFile.close();
     //end save
   }
@@ -462,7 +490,7 @@ void setup()
   mqttClient.setServer(MQTT_SERVER.c_str(), i_mqtt_port);
   mqttClient.setCallback(mqttCallback);
   
-ArduinoOTA.setHostname("WAVIN AHC-9000 GATEWAY");
+ArduinoOTA.setHostname("WAVIN-GATEWAY");
 
    ArduinoOTA.onStart([]() {
      String type;
