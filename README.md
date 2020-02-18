@@ -48,7 +48,7 @@ The following schematic shows how to connect an Esp8266 to the AHC-9000:
 
 ### Configuration
 
-[![Watch the video](https://imgur.com/a/yiwgkPj)](https://youtu.be/ePF0m4f8YUk)
+[![Watch the video](https://i.imgur.com/ATy9gZy.png)](https://youtu.be/ePF0m4f8YUk)
 
 ### Compiling
 I use [PlatformIO](https://platformio.org/) for compiling, uploading, and and maintaining dependencies for my code. If you install PlatformIO in a supported editor, building this project is quite simple. Just open the directory containing `platformio.ini` from this project, and click build/upload. If you use a different board than nodemcu, remember to change the `board` variable in `platformio.ini`.
