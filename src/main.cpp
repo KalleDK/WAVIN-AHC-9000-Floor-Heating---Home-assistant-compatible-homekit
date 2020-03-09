@@ -30,6 +30,7 @@
   ------------------------------------------------------------------------------*/
 
 #include <FS.h>
+#include <Wire.h>
 #include <DNSServer.h>
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
@@ -40,7 +41,15 @@
 #include <DoubleResetDetector.h>
 #include "WavinController.h"
 #include <Ticker.h>
- 
+#include "SSD1306.h"
+#include "config.h"
+
+/*------------------------------------------------------------------------------ 
+SCREEN SETUP - CHANGE VALUES IN CONFIG.H TO YOUR NEEDS
+------------------------------------------------------------------------------*/
+
+SSD1306 display(I2C_DISPLAY_ADDRESS, SDA_PIN, SCL_PIN);
+
 /*------------------------------------------------------------------------------ 
 TICKER SETUP - USED FOR SHOWING IF ESP IS IN CONFIG MODE OR NOT
 ------------------------------------------------------------------------------*/
@@ -57,11 +66,16 @@ void tick()
 //gets called when WiFiManager enters configuration mode
 void configModeCallback (WiFiManager *myWiFiManager) {
   //Serial.println("Entered config mode");
-  //Serial.println(WiFi.softAPIP());
-  //if you used auto generated SSID, print it
-  //Serial.println(myWiFiManager->getConfigPortalSSID());
   //entered config mode, make led toggle faster
   ticker.attach(0.2, tick);
+  display.clear();
+  display.drawString(DISPLAY_WIDTH/2, 7, "Config Portal Mode");
+  display.drawLine(0, 15, 128, 15);
+  // display the AP name
+  display.drawString(DISPLAY_WIDTH/2, 32, "Connect to : " + myWiFiManager->getConfigPortalSSID());
+  // display the AP IP
+  display.drawString(DISPLAY_WIDTH/2, 52, "IP : " + WiFi.softAPIP().toString());
+  display.display();
 }
 
 /*------------------------------------------------------------------------------ 
@@ -305,6 +319,51 @@ void publishConfiguration(uint8_t channel)
   configurationPublished[channel] = true;
 }
 
+void initMqtt()
+{
+  //Default
+  uint8_t mac[6];
+  WiFi.macAddress(mac);
+
+  char macStr[13] = {0};
+  sprintf(macStr, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+  mqttDeviceNameWithMac = String(MQTT_DEVICE_NAME + macStr);
+  mqttClientWithMac = String(MQTT_CLIENT + macStr);
+
+  std::string s_mqtt_port = MQTT_PORT;
+  uint16_t i_mqtt_port = atoi(s_mqtt_port.c_str());
+
+  mqttClient.setServer(MQTT_SERVER.c_str(), i_mqtt_port);
+  mqttClient.setCallback(mqttCallback);
+}
+
+// Enable OTA
+void initOTA()
+{
+  // Setup ArduinoOTA
+  ArduinoOTA.begin();
+  ArduinoOTA.onStart([]() {
+    display.clear();
+    display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+    display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2 - 10, "WAVIN OTA Update");
+    display.display();
+  });
+
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    // Draw nice progress bar
+    display.drawProgressBar(4, 32, 120, 8, progress / (total / 100) );
+    display.display();
+  });
+
+  ArduinoOTA.onEnd([]() {
+    display.clear();
+    display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+    display.drawString(DISPLAY_WIDTH/2, DISPLAY_HEIGHT/2, "Restarting");
+    display.display();
+  });
+}
+
 /*------------------------------------------------------------------------------ 
 SETUP
 ------------------------------------------------------------------------------*/
@@ -313,6 +372,23 @@ void setup()
 {
   //Serial.begin(115200);
   //Serial.println();
+
+  // Setup display
+  display.init();
+  if (INVERT_DISPLAY) {
+    display.flipScreenVertically(); // connections at top of OLED display
+  }
+  display.setFont(ArialMT_Plain_10);
+  display.setTextAlignment(TEXT_ALIGN_CENTER_BOTH);
+
+  // Clear display buffer
+  display.clear();
+  // Write some text
+  //display.drawString(DISPLAY_WIDTH/2, 7, "Booting WAVIN");
+  //display.drawLine(0, 15, 128, 15);
+  display.drawString(DISPLAY_WIDTH/2, 35, "WAVIN AHC-9000\nGATEWAY\nBy Jacob Scherrebck\nV" + String(VERSION));
+  // Send display buffer to display
+  display.display();
 
   //set led pin as output
   pinMode(LED_BUILTIN, OUTPUT);
@@ -330,7 +406,7 @@ void setup()
   char c_MQTT_SERVER[40] = "";
   char c_MQTT_USER[40] = "";
   char c_MQTT_PASS[40] = "";
-  
+
   if (SPIFFS.begin())
   {
     //Serial.println("mounted file system");
@@ -363,21 +439,22 @@ void setup()
           strcpy(MQTT_PORT, json["mqtt_port"]);
           strcpy(c_MQTT_USER, json["mqtt_user"]);
           strcpy(c_MQTT_PASS, json["mqtt_pass"]);
-          
 
           MQTT_CLIENT = String(c_MQTT_CLIENT);
           MQTT_SERVER = String(c_MQTT_SERVER);
           MQTT_USER = String(c_MQTT_USER);
           MQTT_PASS = String(c_MQTT_PASS);
-          
-
-        } else {
+        }
+        else
+        {
           //Serial.println("failed to load json config");
         }
         configFile.close();
       }
     }
-  } else {
+  }
+  else
+  {
     //Serial.println("failed to mount FS");
   }
   //end read
@@ -430,6 +507,15 @@ void setup()
   //if you get here you have connected to the WiFi
   //Serial.println("connected...yeey :)");
 
+  // Wifi connected
+  display.clear();
+  display.drawString(DISPLAY_WIDTH/2, 7, "Gateway Ready");
+  display.drawLine(0, 15, 128, 15);
+  display.drawString(DISPLAY_WIDTH/2, 32, "WAVIN IP : " + WiFi.localIP().toString());
+  display.drawString(DISPLAY_WIDTH/2, 52,                 WiFi.SSID());
+  //display.drawString(DISPLAY_WIDTH/2, 52, "Version : " +  Wavin_Version);
+  display.display();
+
   //read updated parameters
   strcpy(c_MQTT_CLIENT, custom_mqtt_client.getValue());
   strcpy(c_MQTT_SERVER, custom_mqtt_server.getValue());
@@ -473,64 +559,9 @@ void setup()
   //Serial.println("local ip");
   //Serial.println(WiFi.localIP());
 
+  initMqtt();
 
-  //Default
-  uint8_t mac[6];
-  WiFi.macAddress(mac);
-
-  char macStr[13] = {0};
-  sprintf(macStr, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-
-  mqttDeviceNameWithMac = String(MQTT_DEVICE_NAME + macStr);
-  mqttClientWithMac = String(MQTT_CLIENT + macStr);
-
-  std::string s_mqtt_port = MQTT_PORT;
-  uint16_t i_mqtt_port = atoi(s_mqtt_port.c_str());
-
-  mqttClient.setServer(MQTT_SERVER.c_str(), i_mqtt_port);
-  mqttClient.setCallback(mqttCallback);
-  
-ArduinoOTA.setHostname("WAVIN-GATEWAY");
-
-   ArduinoOTA.onStart([]() {
-     String type;
-     if (ArduinoOTA.getCommand() == U_FLASH) {
-       type = "sketch";
-     } else { // U_FS
-       type = "filesystem";
-     }
-
-     // Print to USB instead of Wavin
-     Serial.swap();
-
-     // NOTE: if updating FS this would be the place to unmount FS using FS.end()
-     Serial.println("Start updating " + type);
-   });
-
-   ArduinoOTA.onEnd([]() {
-     Serial.println("\nEnd");
-   });
-
-   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-     Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-   });
-
-   ArduinoOTA.onError([](ota_error_t error) {
-     Serial.printf("Error[%u]: ", error);
-     if (error == OTA_AUTH_ERROR) {
-       Serial.println("Auth Failed");
-     } else if (error == OTA_BEGIN_ERROR) {
-       Serial.println("Begin Failed");
-     } else if (error == OTA_CONNECT_ERROR) {
-       Serial.println("Connect Failed");
-     } else if (error == OTA_RECEIVE_ERROR) {
-       Serial.println("Receive Failed");
-     } else if (error == OTA_END_ERROR) {
-       Serial.println("End Failed");
-     }
-   });
-
-   ArduinoOTA.begin();
+  initOTA();
  }
 
 /*------------------------------------------------------------------------------ 
@@ -560,6 +591,8 @@ void loop()
       if (mqttClient.connect(mqttClientWithMac.c_str(), MQTT_USER.c_str(), MQTT_PASS.c_str(), will.c_str(), 1, true, "False") )
       {
           //Serial.println("Connected to mqtt");
+          //display.drawString(DISPLAY_WIDTH/2, 52, "MQTT CONNECTED");
+          //display.display();
           String setpointSetTopic = String(MQTT_PREFIX + mqttDeviceNameWithMac + "/+" + MQTT_SUFFIX_SETPOINT_SET);
           mqttClient.subscribe(setpointSetTopic.c_str(), 1);
           
