@@ -30,6 +30,7 @@
   ------------------------------------------------------------------------------*/
 
 #include <FS.h>
+#include <LittleFS.h>
 #include <DNSServer.h>
 #include <ArduinoJson.h>
 #include <ArduinoOTA.h>
@@ -320,7 +321,7 @@ void setup()
   ticker.attach(0.6, tick);
 
   //clean FS, for testing
-  //SPIFFS.format();
+  //LittleFS.format();
 
   // WifiManager with custom parameters
 
@@ -331,14 +332,14 @@ void setup()
   char c_MQTT_USER[40] = "";
   char c_MQTT_PASS[40] = "";
   
-  if (SPIFFS.begin())
+  if (LittleFS.begin())
   {
     //Serial.println("mounted file system");
-    if (SPIFFS.exists("/config.json"))
+    if (LittleFS.exists("/config.json"))
     {
       //file exists, reading and loading
       //Serial.println("reading config file");
-      File configFile = SPIFFS.open("/config.json", "r");
+      File configFile = LittleFS.open("/config.json", "r");
       if (configFile)
       {
         //Serial.println("opened config file");
@@ -456,7 +457,7 @@ void setup()
     json["mqtt_user"] = c_MQTT_USER;
     json["mqtt_pass"] = c_MQTT_PASS;
 
-    File configFile = SPIFFS.open("/config.json", "w");
+    File configFile = LittleFS.open("/config.json", "w");
     if (!configFile)
     {
       //Serial.println("failed to open config file for writing");
